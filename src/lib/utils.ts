@@ -47,3 +47,54 @@ export function mapSupabaseAuthError(error: AuthError | { message: string; code?
 
   return error.message || "Ocurrió un error inesperado. Intenta de nuevo.";
 }
+
+/**
+ * Calcula la edad a partir de una fecha de nacimiento en formato ISO (yyyy-mm-dd)
+ * o ISO 8601. Devuelve una cadena legible en español:
+ * - "Menos de 1 mes" para edades < 30 días
+ * - "N meses" cuando es < 12 meses
+ * - "N años" cuando es >= 12 meses
+ * Retorna "—" si la fecha es nula, inválida o está en el futuro.
+ */
+export function calcularEdad(
+  fechaNacimiento: string | null | undefined
+): string {
+  if (!fechaNacimiento) return "—";
+
+  const nacimiento = new Date(fechaNacimiento);
+  if (Number.isNaN(nacimiento.getTime())) return "—";
+
+  const hoy = new Date();
+  const meses =
+    (hoy.getFullYear() - nacimiento.getFullYear()) * 12 +
+    (hoy.getMonth() - nacimiento.getMonth()) -
+    (hoy.getDate() < nacimiento.getDate() ? 1 : 0);
+
+  if (meses < 0) return "—";
+  if (meses < 1) return "Menos de 1 mes";
+  if (meses < 12) return `${meses} ${meses === 1 ? "mes" : "meses"}`;
+
+  const años = Math.floor(meses / 12);
+  return `${años} ${años === 1 ? "año" : "años"}`;
+}
+
+/**
+ * Formatea una fecha a texto legible en español (es-ES): "24 de abril de 2026".
+ * Acepta strings ISO o instancias Date. Devuelve "—" si la entrada es nula o
+ * inválida.
+ */
+export function formatearFecha(
+  fecha: string | Date | null | undefined,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (!fecha) return "—";
+  const d = typeof fecha === "string" ? new Date(fecha) : fecha;
+  if (Number.isNaN(d.getTime())) return "—";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    ...options,
+  }).format(d);
+}
