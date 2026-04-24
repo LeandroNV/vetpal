@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -138,34 +138,37 @@ export type Database = {
       historiales_clinicos: {
         Row: {
           canino_id: string
-          cita_id: string
+          cita_id: string | null
           created_at: string
           diagnostico: string | null
           id: string
           medicamentos: string | null
           motivo_consulta: string
+          proxima_cita: string | null
           tratamiento: string | null
           veterinario_id: string
         }
         Insert: {
           canino_id: string
-          cita_id: string
+          cita_id?: string | null
           created_at?: string
           diagnostico?: string | null
           id?: string
           medicamentos?: string | null
           motivo_consulta: string
+          proxima_cita?: string | null
           tratamiento?: string | null
           veterinario_id: string
         }
         Update: {
           canino_id?: string
-          cita_id?: string
+          cita_id?: string | null
           created_at?: string
           diagnostico?: string | null
           id?: string
           medicamentos?: string | null
           motivo_consulta?: string
+          proxima_cita?: string | null
           tratamiento?: string | null
           veterinario_id?: string
         }

@@ -98,3 +98,80 @@ export function formatearFecha(
     ...options,
   }).format(d);
 }
+
+/**
+ * Formatea un número como precio en pesos colombianos sin decimales.
+ * Ej: 45000 → "$45.000".
+ */
+export function formatearPrecioCOP(precio: number): string {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(precio);
+}
+
+/**
+ * Formatea una duración en minutos a texto corto en español.
+ *   < 60           → "30 min"
+ *   >= 60 y resto=0→ "2h"
+ *   >= 60 y resto>0→ "1h 30min"
+ */
+export function formatearDuracion(minutos: number): string {
+  if (!Number.isFinite(minutos) || minutos <= 0) return "—";
+  if (minutos < 60) return `${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+  if (resto === 0) return `${horas}h`;
+  return `${horas}h ${resto}min`;
+}
+
+/**
+ * Formatea fecha y hora a un texto legible en español con separador editorial.
+ * Ej: "Viernes, 24 de abril de 2026 · 10:00 AM".
+ * Usa `formatToParts` para capitalizar el día de la semana, cambiar la coma
+ * post-año por " · " y normalizar "a. m."/"p. m." → "AM"/"PM".
+ */
+export function formatearFechaHora(fecha: string | Date | null | undefined): string {
+  if (!fecha) return "—";
+  const d = typeof fecha === "string" ? new Date(fecha) : fecha;
+  if (Number.isNaN(d.getTime())) return "—";
+
+  const parts = new Intl.DateTimeFormat("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(d);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+
+  const weekday = get("weekday");
+  const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  const day = get("day");
+  const month = get("month");
+  const year = get("year");
+  const hour = get("hour");
+  const minute = get("minute");
+  const dayPeriodRaw = get("dayPeriod").toUpperCase();
+  const dayPeriod = dayPeriodRaw.replace(/\./g, "").replace(/\s+/g, "");
+
+  return `${weekdayCap}, ${day} de ${month} de ${year} · ${hour}:${minute} ${dayPeriod}`;
+}
+
+export function esVeterinario(rol: string | null | undefined): boolean {
+  return rol === "veterinario";
+}
+
+export function esAdministrador(rol: string | null | undefined): boolean {
+  return rol === "administrador";
+}
+
+export function puedeEscribirHistorial(rol: string | null | undefined): boolean {
+  return rol === "veterinario";
+}

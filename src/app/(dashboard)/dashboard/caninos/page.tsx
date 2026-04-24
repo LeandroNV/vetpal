@@ -142,7 +142,7 @@ function CaninoCard({ canino }: { canino: Canino }) {
         >
           <Link href={`/dashboard/historial?canino=${canino.id}`}>
             <ClipboardList className="size-4" strokeWidth={1.75} />
-            Historial
+            Ver historial
           </Link>
         </Button>
         <Button
