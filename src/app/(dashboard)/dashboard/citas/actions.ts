@@ -67,3 +67,110 @@ export async function cancelarCita(input: {
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+/* -------------------------------------------------------------------------- */
+/* Acciones exclusivas del veterinario                                        */
+/* -------------------------------------------------------------------------- */
+
+const vetActionSchema = z.object({
+  citaId: z.string().uuid("Cita inválida"),
+});
+
+export type VetActionResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Confirma una cita pendiente. Solo veterinarios.
+ * Transición: pendiente → confirmada.
+ */
+export async function confirmarCita(input: {
+  citaId: string;
+}): Promise<VetActionResult> {
+  const parsed = vetActionSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Cita inválida." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Debes iniciar sesión." };
+
+  // Verificar rol veterinario
+  const { data: profile } = await supabase
+    .from("usuarios")
+    .select("rol")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.rol !== "veterinario" && profile.rol !== "administrador")) {
+    return { ok: false, error: "No tienes permisos para esta acción." };
+  }
+
+  const { error, data } = await supabase
+    .from("citas")
+    .update({ estado: "confirmada" })
+    .eq("id", parsed.data.citaId)
+    .eq("estado", "pendiente")
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) {
+    return {
+      ok: false,
+      error: "No se puede confirmar esta cita. Puede que ya esté confirmada o cancelada.",
+    };
+  }
+
+  revalidatePath("/dashboard/citas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/**
+ * Marca una cita confirmada como completada. Solo veterinarios.
+ * Transición: confirmada → completada.
+ */
+export async function completarCita(input: {
+  citaId: string;
+}): Promise<VetActionResult> {
+  const parsed = vetActionSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Cita inválida." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Debes iniciar sesión." };
+
+  // Verificar rol veterinario
+  const { data: profile } = await supabase
+    .from("usuarios")
+    .select("rol")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.rol !== "veterinario" && profile.rol !== "administrador")) {
+    return { ok: false, error: "No tienes permisos para esta acción." };
+  }
+
+  const { error, data } = await supabase
+    .from("citas")
+    .update({ estado: "completada" })
+    .eq("id", parsed.data.citaId)
+    .eq("estado", "confirmada")
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) {
+    return {
+      ok: false,
+      error: "No se puede completar esta cita. Debe estar confirmada primero.",
+    };
+  }
+
+  revalidatePath("/dashboard/citas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+

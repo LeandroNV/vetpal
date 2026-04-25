@@ -1,4 +1,4 @@
-import { CalendarClock, PawPrint } from "lucide-react";
+import { CalendarClock, PawPrint, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CancelarCitaButton } from "@/components/citas/cancelar-cita-button";
+import { AccionesVeterinario } from "@/components/citas/acciones-veterinario";
 import { ESTADO_BADGE, esCancelable, esEstadoCita } from "@/lib/domain/citas";
 import {
   CATEGORIA_LABEL,
@@ -36,21 +37,36 @@ export interface CitaCardData {
   canino: {
     id: string;
     nombre: string;
+    raza: string | null;
   } | null;
+  propietario_nombre?: string | null;
 }
 
-export function CitaCard({ cita }: { cita: CitaCardData }) {
+export function CitaCard({
+  cita,
+  rol = "propietario",
+}: {
+  cita: CitaCardData;
+  rol?: "propietario" | "veterinario" | "administrador";
+}) {
   const estadoKey = esEstadoCita(cita.estado) ? cita.estado : null;
   const estadoCfg = estadoKey ? ESTADO_BADGE[estadoKey] : null;
   const servicio = cita.servicio;
   const canino = cita.canino;
+  const esVet = rol === "veterinario" || rol === "administrador";
 
   const categoriaLabel =
     servicio && esCategoriaServicio(servicio.categoria)
       ? CATEGORIA_LABEL[servicio.categoria]
       : null;
 
-  const mostrarCancelar = esCancelable(cita.estado, cita.fecha_hora);
+  const mostrarCancelar =
+    !esVet && esCancelable(cita.estado, cita.fecha_hora);
+
+  // Identidad del canino: nombre + raza
+  const caninoIdentidad = canino
+    ? `${canino.nombre} (${canino.raza?.trim() || "Mestizo"})`
+    : "—";
 
   return (
     <Card className="gap-4">
@@ -88,8 +104,20 @@ export function CitaCard({ cita }: { cita: CitaCardData }) {
               aria-hidden="true"
             />
             <dt className="sr-only">Canino</dt>
-            <dd className="text-foreground">{canino?.nombre ?? "—"}</dd>
+            <dd className="text-foreground">{caninoIdentidad}</dd>
           </div>
+
+          {esVet && cita.propietario_nombre ? (
+            <div className="flex items-center gap-1.5">
+              <User
+                className="size-4"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <dt className="sr-only">Propietario</dt>
+              <dd>{cita.propietario_nombre}</dd>
+            </div>
+          ) : null}
 
           <div className="flex items-center gap-1.5">
             <CalendarClock
@@ -121,13 +149,23 @@ export function CitaCard({ cita }: { cita: CitaCardData }) {
         ) : null}
       </CardContent>
 
-      {mostrarCancelar && servicio && canino ? (
-        <CardFooter className="justify-end pt-0">
-          <CancelarCitaButton
-            citaId={cita.id}
-            nombreServicio={servicio.nombre}
-            nombreCanino={canino.nombre}
-          />
+      {(mostrarCancelar || esVet) && servicio && canino ? (
+        <CardFooter className="justify-end gap-2 pt-0">
+          {mostrarCancelar ? (
+            <CancelarCitaButton
+              citaId={cita.id}
+              nombreServicio={servicio.nombre}
+              nombreCanino={canino.nombre}
+            />
+          ) : null}
+          {esVet ? (
+            <AccionesVeterinario
+              citaId={cita.id}
+              caninoId={canino.id}
+              estado={cita.estado}
+              servicioNombre={servicio.nombre}
+            />
+          ) : null}
         </CardFooter>
       ) : null}
     </Card>

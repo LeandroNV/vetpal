@@ -18,6 +18,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { EliminarCaninoButton } from "@/components/caninos/eliminar-canino-button";
 import { calcularEdad, cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/database.types";
@@ -156,6 +157,10 @@ function CaninoCard({ canino }: { canino: Canino }) {
             Editar
           </Link>
         </Button>
+        <EliminarCaninoButton
+          caninoId={canino.id}
+          nombre={canino.nombre}
+        />
       </CardFooter>
     </Card>
   );

@@ -275,6 +275,4 @@ flowchart TB
 
 ---
 
-**Autores del proyecto:** Andrés Mantilla (PM), Camilo Agudelo (Backend), Eduardo Ramírez (Frontend), Leandro Vargas (QA).
-**Docente:** Ing. MSc. Marcela Cascante M.
-**Institución:** Politécnico Grancolombiano — Gerencia de Proyectos Informáticos.
+
