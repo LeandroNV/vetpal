@@ -49,7 +49,7 @@ export default function Navbar() {
           className="flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-90"
         >
           <PawPrint className="size-7 text-accent" strokeWidth={1.75} aria-hidden />
-          <span className="font-heading text-xl font-extrabold tracking-tight">VETPAL</span>
+          <span className="font-serif text-2xl font-bold tracking-tight">VETPAL</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

@@ -1,92 +1,156 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
-import { Apple, Heart, Home, Scissors, Stethoscope, type LucideIcon } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Apple, Heart, Home, Scissors, Stethoscope, ArrowRight, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Service = {
   name: string;
   description: string;
   price: string;
   icon: LucideIcon;
+  color: string;
+  bg: string;
 };
 
 const SERVICES: Service[] = [
   {
     name: "Salud preventiva",
-    description: "Consultas, vacunas y planes preventivos para detectar riesgos a tiempo.",
+    description: "Consultas, vacunas y planes preventivos para detectar riesgos a tiempo con el mejor equipo médico.",
     price: "Desde $45.000",
     icon: Stethoscope,
+    color: "text-emerald-700",
+    bg: "bg-emerald-100/50",
   },
   {
-    name: "Estética",
-    description: "Baño, grooming y cuidado del pelaje con protocolos de bienestar canino.",
+    name: "Estética y Grooming",
+    description: "Baño, corte de raza y cuidado del pelaje con protocolos de bienestar que reducen el estrés de tu mascota.",
     price: "Desde $35.000",
     icon: Scissors,
+    color: "text-blue-700",
+    bg: "bg-blue-100/50",
   },
   {
-    name: "Nutrición",
-    description: "Guías y planes alimentarios según raza, edad y condición de tu peludo.",
+    name: "Nutrición Especializada",
+    description: "Guías alimentarias formuladas según la raza, edad, peso y condiciones preexistentes de tu peludo.",
     price: "Desde $28.000",
     icon: Apple,
+    color: "text-orange-700",
+    bg: "bg-orange-100/50",
   },
   {
-    name: "Guardería",
-    description: "Espacios seguros y acompañamiento cuando no puedes estar cerca.",
+    name: "Guardería Premium",
+    description: "Espacios seguros, socialización supervisada y acompañamiento continuo cuando no puedes estar en casa.",
     price: "Desde $40.000",
     icon: Home,
-  },
-  {
-    name: "Funerarios",
-    description: "Acompañamiento respetuoso y humano en los momentos más difíciles.",
-    price: "Consultar",
-    icon: Heart,
+    color: "text-purple-700",
+    bg: "bg-purple-100/50",
   },
 ];
 
 export default function ServiciosSection() {
   const reduceMotion = useReducedMotion();
-  const anim = !reduceMotion;
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <section id="servicios" className="scroll-mt-24 bg-background py-32">
-      <div className="mx-auto mb-16 max-w-2xl px-6 text-center">
-        <p className="text-sm font-semibold tracking-widest text-primary uppercase">Nuestros servicios</p>
-        <h2 className="mt-3 font-heading text-4xl font-bold text-foreground md:text-5xl">Todo lo que tu canino necesita</h2>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Un catálogo claro de servicios para cuidar la salud, el bienestar y la tranquilidad de tu compañero.
-        </p>
-      </div>
+    <section id="servicios" className="scroll-mt-24 py-32 bg-white">
+      <div className="mx-auto max-w-7xl px-6">
+        
+        <div className="mb-20 max-w-2xl">
+          <p className="text-sm font-bold tracking-widest text-[#C46A42] uppercase mb-4">Nuestra Clínica</p>
+          <h2 className="font-serif text-4xl leading-[1.1] text-[#1A2E25] md:text-6xl">
+            Todo lo que tu compañero necesita.
+          </h2>
+        </div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 md:grid-cols-2 lg:grid-cols-3">
-        {SERVICES.map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <motion.article
-              key={s.name}
-              className="group rounded-2xl border border-border bg-card p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-              initial={anim ? { opacity: 0, y: 40 } : false}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-8%" }}
-              transition={{ duration: anim ? 0.5 : 0, delay: anim ? i * 0.1 : 0, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-primary/10">
-                <Icon className="size-6 text-primary" strokeWidth={1.75} aria-hidden />
-              </div>
-              <h3 className="font-heading text-xl font-semibold text-foreground">{s.name}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.description}</p>
-              <div className="mt-4 flex items-center justify-between">
-                <span className="font-semibold text-foreground">{s.price}</span>
-                <Link
-                  href="/register"
-                  className="text-sm font-medium text-primary transition-transform duration-300 group-hover:translate-x-1"
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+          
+          {/* Left: Accordion / List */}
+          <div className="lg:col-span-6 flex flex-col gap-2 relative z-10">
+            {SERVICES.map((s, i) => {
+              const Icon = s.icon;
+              const isActive = activeIndex === i;
+              
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => setActiveIndex(i)}
+                  className={cn(
+                    "group relative flex flex-col items-start rounded-[2rem] p-8 text-left transition-all duration-500",
+                    isActive ? s.bg : "hover:bg-muted/50"
+                  )}
                 >
-                  Agendar →
-                </Link>
-              </div>
-            </motion.article>
-          );
-        })}
+                  <div className="flex w-full items-center justify-between mb-4">
+                    <div className={cn("flex size-12 items-center justify-center rounded-full transition-colors", isActive ? "bg-white shadow-sm" : "bg-white border border-border")}>
+                      <Icon className={cn("size-5", isActive ? s.color : "text-muted-foreground")} strokeWidth={2} />
+                    </div>
+                    <ArrowRight className={cn("size-5 transition-transform duration-300", isActive ? "rotate-45 " + s.color : "opacity-0 -translate-x-4")} />
+                  </div>
+                  
+                  <h3 className={cn("font-serif text-2xl mb-2 transition-colors", isActive ? "text-[#1A2E25]" : "text-muted-foreground")}>
+                    {s.name}
+                  </h3>
+                  
+                  <AnimatePresence initial={false}>
+                    {isActive && (
+                      <motion.div
+                        initial={reduceMotion ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={reduceMotion ? { opacity: 0, height: 0 } : { opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="text-[#4A5D53] leading-relaxed mb-6 pt-2">
+                          {s.description}
+                        </p>
+                        <div className="flex items-center justify-between w-full border-t border-black/5 pt-4">
+                          <span className="font-medium text-sm text-[#1A2E25]">{s.price}</span>
+                          <Link href="/register" className={cn("text-sm font-semibold hover:underline", s.color)}>
+                            Agendar Cita
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right: Sticky Visual Showcase */}
+          <div className="lg:col-span-6 lg:sticky lg:top-32 hidden md:block">
+            <div className="aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted relative shadow-2xl shadow-black/5 ring-1 ring-black/5">
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={activeIndex}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                  className={cn("absolute inset-0 size-full flex items-center justify-center", SERVICES[activeIndex].bg)}
+                >
+                  {/* Decorative abstract elements instead of real images for now */}
+                  <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)]" />
+                  
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="relative z-10 size-48 rounded-full bg-white shadow-xl flex items-center justify-center"
+                  >
+                    {(() => {
+                      const ActiveIcon = SERVICES[activeIndex].icon;
+                      return <ActiveIcon className={cn("size-20", SERVICES[activeIndex].color)} strokeWidth={1.5} />;
+                    })()}
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+          
+        </div>
       </div>
     </section>
   );

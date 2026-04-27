@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
+import { Inter, Bricolage_Grotesque, JetBrains_Mono, Fraunces } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,13 @@ const bricolage = Bricolage_Grotesque({
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  axes: ["SOFT", "WONK"],
   display: "swap",
 });
 
@@ -48,6 +55,7 @@ export default function RootLayout({
         inter.variable,
         bricolage.variable,
         jetbrains.variable,
+        fraunces.variable,
         "font-sans"
       )}
       suppressHydrationWarning
