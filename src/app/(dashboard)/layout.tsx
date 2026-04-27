@@ -5,27 +5,20 @@ import type { ReactNode } from "react";
 
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const auth = await getAuthProfile();
 
-  if (!user) {
+  if (!auth) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("usuarios")
-    .select("nombre_completo, rol")
-    .eq("id", user.id)
-    .single();
+  const { user, profile } = auth;
 
   return (
     <div className="flex min-h-dvh bg-background">

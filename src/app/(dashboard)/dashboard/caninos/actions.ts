@@ -17,7 +17,8 @@ export type EliminarCaninoResult = { ok: true } | { ok: false; error: string };
  *   2. auth.getUser() — nunca getSession().
  *   3. Defensa en profundidad: además de RLS (`caninos_delete_owner`)
  *      forzamos `.eq('propietario_id', user.id)` en el DELETE.
- *   4. revalidatePath refresca el listado tras la mutación.
+ *   4. Verifica FK: rechaza si el canino tiene citas activas o historial.
+ *   5. revalidatePath refresca el listado tras la mutación.
  */
 export async function eliminarCanino(input: {
   caninoId: string;
@@ -45,6 +46,33 @@ export async function eliminarCanino(input: {
 
   if (!canino) {
     return { ok: false, error: "No autorizado." };
+  }
+
+  // FK check: verificar citas activas (pendiente o confirmada)
+  const { count: citasActivas } = await supabase
+    .from("citas")
+    .select("*", { count: "exact", head: true })
+    .eq("canino_id", parsed.data.caninoId)
+    .in("estado", ["pendiente", "confirmada"]);
+
+  if (citasActivas && citasActivas > 0) {
+    return {
+      ok: false,
+      error: `Este canino tiene ${citasActivas} cita${citasActivas > 1 ? "s" : ""} activa${citasActivas > 1 ? "s" : ""}. Cancélalas antes de eliminarlo.`,
+    };
+  }
+
+  // FK check: verificar historial clínico
+  const { count: registrosHistorial } = await supabase
+    .from("historiales_clinicos")
+    .select("*", { count: "exact", head: true })
+    .eq("canino_id", parsed.data.caninoId);
+
+  if (registrosHistorial && registrosHistorial > 0) {
+    return {
+      ok: false,
+      error: `Este canino tiene ${registrosHistorial} registro${registrosHistorial > 1 ? "s" : ""} en su historial clínico. No se puede eliminar un canino con historial.`,
+    };
   }
 
   const { error } = await supabase

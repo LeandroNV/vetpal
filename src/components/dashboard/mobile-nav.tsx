@@ -17,10 +17,13 @@ import type { Database } from "@/lib/supabase/database.types";
 
 import { LogoutButton } from "./logout-button";
 import { NavList } from "./nav-list";
+import { ThemeToggle } from "./theme-toggle";
+import { VetCommandMenu } from "./vet-command-menu";
 
 type Rol = Database["public"]["Enums"]["rol_usuario"];
 
 type Profile = {
+  id: string;
   nombre_completo: string;
   rol: Rol;
 } | null;
@@ -88,7 +91,19 @@ export function MobileNav({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-3">
-          <NavList onNavigate={close} />
+          <SheetTitle className="sr-only">
+            Menú de navegación
+          </SheetTitle>
+
+          <div className="flex flex-col gap-6 py-6">
+            {(profile?.rol === "veterinario" || profile?.rol === "administrador") && (
+              <div className="px-6">
+                <VetCommandMenu />
+              </div>
+            )}
+            
+            <NavList rol={profile?.rol ?? "propietario"} onNavigate={close} />
+          </div>
         </div>
 
         <Separator />
@@ -108,6 +123,7 @@ export function MobileNav({
               <p className="truncate text-xs text-muted-foreground">{rolLabel}</p>
             ) : null}
           </div>
+          <ThemeToggle />
           <LogoutButton />
         </div>
       </SheetContent>

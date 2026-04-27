@@ -19,6 +19,12 @@ import {
   esVeterinario,
   puedeEscribirHistorial,
 } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Historial Clínico — VETPAL",
+  description: "Consulta y registra el historial clínico de tus caninos: diagnósticos, tratamientos y seguimiento.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -176,7 +182,7 @@ export default async function HistorialPage({
 
     return (
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between auth-enter auth-enter-1">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">
               Clínica
@@ -214,7 +220,7 @@ export default async function HistorialPage({
           </p>
         ) : null}
 
-        <section className="space-y-4" aria-label="Registros clínicos">
+        <section className="space-y-4 auth-enter auth-enter-2" aria-label="Registros clínicos">
           {!caninoParam && items.length > 0 ? (
             <h2 className="font-display text-lg font-semibold text-foreground">
               Todos los registros

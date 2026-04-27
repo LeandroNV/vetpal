@@ -16,9 +16,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { CitaCard, type CitaCardData } from "@/components/citas/cita-card";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 import type { Database } from "@/lib/supabase/database.types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Citas — VETPAL",
+  description: "Gestiona tus citas veterinarias: agenda, confirma y revisa el historial de visitas.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -29,20 +37,11 @@ type Rol = Database["public"]["Enums"]["rol_usuario"];
 /* ========================================================================== */
 
 export default async function CitasPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const auth = await getAuthProfile();
+  if (!auth) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("usuarios")
-    .select("rol")
-    .eq("id", user.id)
-    .single();
-
-  const rol: Rol = profile?.rol ?? "propietario";
-  const esVet = rol === "veterinario" || rol === "administrador";
+  const { user, profile } = auth;
+  const esVet = profile.rol === "veterinario" || profile.rol === "administrador";
 
   if (esVet) {
     return <VeterinarioCitasView />;
@@ -90,7 +89,7 @@ async function PropietarioCitasView({ userId }: { userId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-4 auth-enter auth-enter-1">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium text-muted-foreground">
             Agenda
@@ -111,7 +110,7 @@ async function PropietarioCitasView({ userId }: { userId: string }) {
         </Button>
       </header>
 
-      <Tabs defaultValue="proximas" className="gap-6">
+      <Tabs defaultValue="proximas" className="gap-6 auth-enter auth-enter-2">
         <TabsList>
           <TabsTrigger value="proximas">
             Próximas
@@ -166,68 +165,82 @@ interface VetCita extends CitaCardData {
 async function VeterinarioCitasView() {
   const supabase = await createClient();
 
-  const { data: citas } = await supabase
-    .from("citas")
-    .select(
-      `id, fecha_hora, estado, observaciones,
-       servicio:servicios(id, nombre, categoria, precio, duracion_minutos),
-       canino:caninos(id, nombre, raza, propietario:usuarios!caninos_propietario_id_fkey(nombre_completo))`
-    )
-    .order("fecha_hora", { ascending: true })
-    .returns<
-      Array<{
-        id: string;
-        fecha_hora: string;
-        estado: string;
-        observaciones: string | null;
-        servicio: {
-          id: string;
-          nombre: string;
-          categoria: string;
-          precio: number;
-          duracion_minutos: number;
-        } | null;
-        canino: {
-          id: string;
-          nombre: string;
-          raza: string | null;
-          propietario: { nombre_completo: string } | null;
-        } | null;
-      }>
-    >();
+  const vetSelect = `id, fecha_hora, estado, observaciones,
+     servicio:servicios(id, nombre, categoria, precio, duracion_minutos),
+     canino:caninos(id, nombre, raza, propietario:usuarios!caninos_propietario_id_fkey(nombre_completo))`;
+
+  type VetCitaRaw = {
+    id: string;
+    fecha_hora: string;
+    estado: string;
+    observaciones: string | null;
+    servicio: {
+      id: string;
+      nombre: string;
+      categoria: string;
+      precio: number;
+      duracion_minutos: number;
+    } | null;
+    canino: {
+      id: string;
+      nombre: string;
+      raza: string | null;
+      propietario: { nombre_completo: string } | null;
+    } | null;
+  };
 
   const ahora = new Date();
   const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const hoyFin = new Date(hoyInicio.getTime() + 86_400_000);
 
-  const todas = (citas ?? []).map((c) => ({
-    ...c,
-    propietario_nombre: c.canino?.propietario?.nombre_completo ?? null,
-    canino: c.canino
-      ? { id: c.canino.id, nombre: c.canino.nombre, raza: c.canino.raza }
-      : null,
-  })) satisfies VetCita[];
+  // 3 queries paralelas con filtros en servidor — no carga todo
+  const [hoyRes, proximasRes, historialRes] = await Promise.all([
+    // Hoy: todas las citas del día
+    supabase
+      .from("citas")
+      .select(vetSelect)
+      .gte("fecha_hora", hoyInicio.toISOString())
+      .lt("fecha_hora", hoyFin.toISOString())
+      .order("fecha_hora", { ascending: true })
+      .returns<VetCitaRaw[]>(),
 
-  const hoy = todas.filter((c) => {
-    const d = new Date(c.fecha_hora);
-    return d >= hoyInicio && d < hoyFin;
-  });
+    // Próximas: futuras activas (máx 50)
+    supabase
+      .from("citas")
+      .select(vetSelect)
+      .gte("fecha_hora", hoyFin.toISOString())
+      .in("estado", ["pendiente", "confirmada"])
+      .order("fecha_hora", { ascending: true })
+      .limit(50)
+      .returns<VetCitaRaw[]>(),
 
-  const proximas = todas.filter((c) => {
-    const d = new Date(c.fecha_hora);
-    return (
-      d >= hoyFin &&
-      (c.estado === "pendiente" || c.estado === "confirmada")
-    );
-  });
+    // Historial: completadas/canceladas (máx 50, más recientes primero)
+    supabase
+      .from("citas")
+      .select(vetSelect)
+      .in("estado", ["completada", "cancelada"])
+      .order("fecha_hora", { ascending: false })
+      .limit(50)
+      .returns<VetCitaRaw[]>(),
+  ]);
 
-  const historialVet = todas.filter(
-    (c) => c.estado === "completada" || c.estado === "cancelada"
-  );
+  function mapVetCita(c: VetCitaRaw): VetCita {
+    return {
+      ...c,
+      propietario_nombre: c.canino?.propietario?.nombre_completo ?? null,
+      canino: c.canino
+        ? { id: c.canino.id, nombre: c.canino.nombre, raza: c.canino.raza }
+        : null,
+    };
+  }
+
+  const hoy = (hoyRes.data ?? []).map(mapVetCita);
+  const proximas = (proximasRes.data ?? []).map(mapVetCita);
+  const historialVet = (historialRes.data ?? []).map(mapVetCita);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-4 auth-enter auth-enter-1">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium text-muted-foreground">
             Gestión
@@ -241,7 +254,7 @@ async function VeterinarioCitasView() {
         </div>
       </header>
 
-      <Tabs defaultValue="hoy" className="gap-6">
+      <Tabs defaultValue="hoy" className="gap-6 auth-enter auth-enter-2">
         <TabsList>
           <TabsTrigger value="hoy">
             Hoy
@@ -307,17 +320,43 @@ async function VeterinarioCitasView() {
 /* Empty states                                                               */
 /* ========================================================================== */
 
+function EmptyCitasIllustration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 128 128"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={cn("text-primary", className)}
+      fill="none"
+    >
+      <circle cx="64" cy="64" r="60" className="fill-current opacity-10" />
+      <path
+        d="M44 48H84C88.4183 48 92 51.5817 92 56V84C92 88.4183 88.4183 92 84 92H44C39.5817 92 36 88.4183 36 84V56C36 51.5817 39.5817 48 44 48Z"
+        className="stroke-current opacity-30"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M36 56H92M80 40V56M48 40V56"
+        className="stroke-current opacity-50"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="54" cy="72" r="4" className="fill-current opacity-70" />
+      <circle cx="74" cy="72" r="4" className="fill-current opacity-40" />
+      <circle cx="54" cy="82" r="4" className="fill-current opacity-40" />
+    </svg>
+  );
+}
+
 function EmptyProximas() {
   return (
-    <Card className="items-center gap-4 px-6 py-12 text-center">
-      <div
-        className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary"
-        aria-hidden="true"
-      >
-        <CalendarDays className="size-6" strokeWidth={1.75} />
-      </div>
+    <Card className="items-center gap-6 px-6 py-16 text-center">
+      <EmptyCitasIllustration className="size-32 text-primary/40" />
       <div className="flex max-w-sm flex-col gap-2">
-        <h3 className="font-display text-lg font-semibold text-foreground">
+        <h3 className="font-display text-2xl font-bold tracking-tight text-foreground">
           No tienes citas próximas
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -325,7 +364,7 @@ function EmptyProximas() {
           detalles.
         </p>
       </div>
-      <Button asChild className="press-feedback">
+      <Button asChild size="lg" className="press-feedback mt-2">
         <Link href="/dashboard/citas/nueva">
           <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
           Agendar ahora
@@ -354,15 +393,10 @@ function EmptyHistorial() {
 
 function EmptyHoy() {
   return (
-    <Card className="items-center gap-4 px-6 py-12 text-center">
-      <div
-        className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary"
-        aria-hidden="true"
-      >
-        <Stethoscope className="size-6" strokeWidth={1.75} />
-      </div>
+    <Card className="items-center gap-6 px-6 py-16 text-center">
+      <EmptyCitasIllustration className="size-32 text-primary/40" />
       <div className="flex max-w-sm flex-col gap-2">
-        <h3 className="font-display text-lg font-semibold text-foreground">
+        <h3 className="font-display text-2xl font-bold tracking-tight text-foreground">
           No hay citas programadas para hoy
         </h3>
         <p className="text-sm text-muted-foreground">

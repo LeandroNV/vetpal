@@ -11,6 +11,7 @@ import {
 import { CancelarCitaButton } from "@/components/citas/cancelar-cita-button";
 import { AccionesVeterinario } from "@/components/citas/acciones-veterinario";
 import { ESTADO_BADGE, esCancelable, esEstadoCita } from "@/lib/domain/citas";
+import { HoverCardWrapper } from "@/components/ui/hover-card-wrapper";
 import {
   CATEGORIA_LABEL,
   esCategoriaServicio,
@@ -69,7 +70,8 @@ export function CitaCard({
     : "—";
 
   return (
-    <Card className="gap-4">
+    <HoverCardWrapper>
+      <Card className="gap-4">
       <CardHeader className="gap-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
@@ -83,14 +85,30 @@ export function CitaCard({
             ) : null}
           </div>
           {estadoCfg ? (
-            <span
-              className={cn(
-                "inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium",
-                estadoCfg.className
-              )}
-            >
-              {estadoCfg.label}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {cita.estado === "confirmada" &&
+              (() => {
+                const diffMinutos =
+                  (new Date(cita.fecha_hora).getTime() - Date.now()) / 60000;
+                return diffMinutos > 0 && diffMinutos <= 30;
+              })() ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                  <span className="relative flex size-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex size-1.5 rounded-full bg-destructive"></span>
+                  </span>
+                  En breve
+                </span>
+              ) : null}
+              <span
+                className={cn(
+                  "inline-flex h-6 items-center rounded-full px-2.5 text-xs font-medium",
+                  estadoCfg.className
+                )}
+              >
+                {estadoCfg.label}
+              </span>
+            </div>
           ) : null}
         </div>
       </CardHeader>
@@ -169,5 +187,6 @@ export function CitaCard({
         </CardFooter>
       ) : null}
     </Card>
+    </HoverCardWrapper>
   );
 }

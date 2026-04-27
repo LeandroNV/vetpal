@@ -17,6 +17,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 import {
   CATEGORIAS,
   CATEGORIA_LABEL,
@@ -25,6 +26,12 @@ import {
 } from "@/lib/domain/servicios";
 import type { Tables } from "@/lib/supabase/database.types";
 import { formatearDuracion, formatearPrecioCOP } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Catálogo de Servicios — VETPAL",
+  description: "Explora servicios veterinarios disponibles: consultas, vacunas, cirugías, estética y más.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +39,8 @@ type Servicio = Tables<"servicios">;
 
 export default async function ServiciosPage() {
   const supabase = await createClient();
+  const auth = await getAuthProfile();
+  const puedeAgendar = auth ? auth.profile.rol === "propietario" : true;
 
   const { data: servicios } = await supabase
     .from("servicios")
@@ -44,7 +53,7 @@ export default async function ServiciosPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col gap-2 auth-enter auth-enter-1">
         <p className="text-sm font-medium text-muted-foreground">
           Catálogo
         </p>
@@ -57,7 +66,7 @@ export default async function ServiciosPage() {
         </p>
       </header>
 
-      <Tabs defaultValue="salud_preventiva" className="gap-6">
+      <Tabs defaultValue="salud_preventiva" className="gap-6 auth-enter auth-enter-2">
         <TabsList className="flex-wrap">
           {CATEGORIAS.map((cat) => (
             <TabsTrigger key={cat} value={cat}>
@@ -73,7 +82,7 @@ export default async function ServiciosPage() {
               {lista.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {lista.map((s) => (
-                    <ServicioCard key={s.id} servicio={s} />
+                    <ServicioCard key={s.id} servicio={s} mostrarAgendar={puedeAgendar} />
                   ))}
                 </div>
               ) : (
@@ -98,7 +107,13 @@ function agruparPorCategoria(
   return acc;
 }
 
-function ServicioCard({ servicio }: { servicio: Servicio }) {
+function ServicioCard({
+  servicio,
+  mostrarAgendar,
+}: {
+  servicio: Servicio;
+  mostrarAgendar: boolean;
+}) {
   return (
     <Card className="group/servicio gap-4 transition-shadow duration-200 hover:shadow-lg">
       <CardHeader className="gap-2">
@@ -126,14 +141,16 @@ function ServicioCard({ servicio }: { servicio: Servicio }) {
         </span>
       </CardContent>
 
-      <CardFooter className="pt-0">
-        <Button asChild className="press-feedback w-full">
-          <Link href={`/dashboard/citas/nueva?servicio=${servicio.id}`}>
-            <CalendarPlus className="size-4" strokeWidth={2} aria-hidden="true" />
-            Agendar
-          </Link>
-        </Button>
-      </CardFooter>
+      {mostrarAgendar ? (
+        <CardFooter className="pt-0">
+          <Button asChild className="press-feedback w-full">
+            <Link href={`/dashboard/citas/nueva?servicio=${servicio.id}`}>
+              <CalendarPlus className="size-4" strokeWidth={2} aria-hidden="true" />
+              Agendar
+            </Link>
+          </Button>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

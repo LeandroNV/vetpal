@@ -30,7 +30,14 @@ import {
 } from "@/lib/domain/servicios";
 import { cn, formatearFecha } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 import type { Database } from "@/lib/supabase/database.types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard — VETPAL",
+  description: "Panel principal con resumen de caninos, citas próximas y acceso rápido a todas las funcionalidades.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -67,31 +74,21 @@ function formatearFechaCorta(fecha: string): string {
 /* ========================================================================== */
 
 export default async function DashboardHomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const auth = await getAuthProfile();
+  if (!auth) return null;
 
-  if (!user) return null;
+  const { user, profile } = auth;
 
-  const { data: profile } = await supabase
-    .from("usuarios")
-    .select("nombre_completo, rol")
-    .eq("id", user.id)
-    .single();
-
-  const rol: Rol = profile?.rol ?? "propietario";
-
-  if (rol === "veterinario" || rol === "administrador") {
+  if (profile.rol === "veterinario" || profile.rol === "administrador") {
     return (
       <VeterinarioDashboard
-        nombre={profile?.nombre_completo ?? "Doctor"}
+        nombre={profile.nombre_completo}
         userId={user.id}
       />
     );
   }
 
-  return <PropietarioDashboard userId={user.id} nombre={profile?.nombre_completo ?? null} />;
+  return <PropietarioDashboard userId={user.id} nombre={profile.nombre_completo} />;
 }
 
 /* ========================================================================== */
@@ -117,7 +114,7 @@ async function PropietarioDashboard({
   nombre,
 }: {
   userId: string;
-  nombre: string | null;
+  nombre: string;
 }) {
   const supabase = await createClient();
   const ahora = new Date();
@@ -469,48 +466,81 @@ async function VeterinarioDashboard({
                   const catLabel = esCategoriaServicio(cita.servicio_categoria)
                     ? CATEGORIA_LABEL[cita.servicio_categoria]
                     : null;
+                  const diffMinutos =
+                    (new Date(cita.fecha_hora).getTime() - Date.now()) / 60000;
+                  const esUrgente =
+                    cita.estado === "confirmada" &&
+                    diffMinutos > 0 &&
+                    diffMinutos <= 30;
 
                   return (
                     <li
                       key={cita.id}
-                      className="flex items-center gap-4 py-3"
+                      className={cn(
+                        "flex flex-col sm:flex-row sm:items-center gap-3 py-4 sm:py-3 transition-colors",
+                        esUrgente && "bg-destructive/5 -mx-4 px-4 sm:-mx-6 sm:px-6 rounded-lg"
+                      )}
                     >
-                      <div className="flex shrink-0 flex-col items-center">
-                        <span className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                          {formatearHoraCorta(cita.fecha_hora)}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {cita.canino_nombre}{" "}
-                            <span className="font-normal text-muted-foreground">
-                              ({cita.canino_raza?.trim() || "Mestizo"})
-                            </span>
-                          </p>
-                          {catLabel ? (
-                            <Badge
-                              variant="secondary"
-                              className="shrink-0 text-[10px]"
-                            >
-                              {catLabel}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {cita.servicio_nombre} · Prop: {cita.propietario_nombre}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        {estadoCfg ? (
-                          <span
-                            className={cn(
-                              "inline-flex h-6 items-center rounded-full px-2 text-[11px] font-medium",
-                              estadoCfg.className
-                            )}
-                          >
-                            {estadoCfg.label}
+                      <div className="flex items-start sm:items-center gap-4 w-full sm:w-auto flex-1 min-w-0">
+                        <div className="flex shrink-0 flex-col items-center mt-0.5 sm:mt-0">
+                          <span className="font-mono text-sm font-semibold text-foreground tabular-nums">
+                            {formatearHoraCorta(cita.fecha_hora)}
                           </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              <Link
+                                href={`/dashboard/historial?canino=${cita.canino_id}`}
+                                className="hover:text-primary hover:underline underline-offset-2 transition-colors"
+                              >
+                                {cita.canino_nombre}
+                              </Link>{" "}
+                              <span className="font-normal text-muted-foreground">
+                                ({cita.canino_raza?.trim() || "Mestizo"})
+                              </span>
+                            </p>
+                            {catLabel ? (
+                              <Badge
+                                variant="secondary"
+                                className="shrink-0 text-[10px]"
+                              >
+                                {catLabel}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {cita.servicio_nombre} · Prop: {cita.propietario_nombre}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex shrink-0 items-center gap-2 pl-[3.25rem] sm:pl-0">
+                        {estadoCfg ? (
+                          <>
+                            {cita.estado === "confirmada" &&
+                            (() => {
+                              const diffMinutos =
+                                (new Date(cita.fecha_hora).getTime() - Date.now()) / 60000;
+                              return diffMinutos > 0 && diffMinutos <= 30;
+                            })() ? (
+                              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                                <span className="relative flex size-1.5">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
+                                  <span className="relative inline-flex size-1.5 rounded-full bg-destructive"></span>
+                                </span>
+                                En breve
+                              </span>
+                            ) : null}
+                            <span
+                              className={cn(
+                                "inline-flex shrink-0 h-6 items-center rounded-full px-2 text-[11px] font-medium",
+                                estadoCfg.className
+                              )}
+                            >
+                              {estadoCfg.label}
+                            </span>
+                          </>
                         ) : null}
                         <AccionesVeterinario
                           citaId={cita.id}

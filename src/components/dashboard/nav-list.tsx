@@ -12,34 +12,51 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import type { Database } from "@/lib/supabase/database.types";
+
+type Rol = Database["public"]["Enums"]["rol_usuario"];
 
 type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Roles que ven este item. Undefined = todos. */
+  roles?: ReadonlyArray<Rol>;
 };
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
-  { href: "/dashboard/caninos", label: "Mis Caninos", icon: PawPrint },
+  {
+    href: "/dashboard/caninos",
+    label: "Mis Caninos",
+    icon: PawPrint,
+    roles: ["propietario"],
+  },
   { href: "/dashboard/citas", label: "Citas", icon: CalendarDays },
   { href: "/dashboard/historial", label: "Historial", icon: ClipboardList },
   { href: "/dashboard/servicios", label: "Catálogo", icon: Stethoscope },
 ];
 
+function filterByRole(items: ReadonlyArray<NavItem>, rol: Rol): NavItem[] {
+  return items.filter((item) => !item.roles || item.roles.includes(rol));
+}
+
 export function NavList({
+  rol = "propietario",
   onNavigate,
   className,
 }: {
+  rol?: Rol;
   onNavigate?: () => void;
   className?: string;
 }) {
   const pathname = usePathname();
+  const visibleItems = filterByRole(NAV_ITEMS, rol);
 
   return (
     <nav aria-label="Navegación principal" className={cn("px-3", className)}>
       <ul className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === "/dashboard"

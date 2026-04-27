@@ -17,6 +17,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { HoverCardWrapper } from "@/components/ui/hover-card-wrapper";
 import { Separator } from "@/components/ui/separator";
 import { EliminarCaninoButton } from "@/components/caninos/eliminar-canino-button";
 import { calcularEdad, cn } from "@/lib/utils";
@@ -74,7 +75,7 @@ export default async function CaninosPage() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
           {list.map((canino) => (
-            <CaninoCard key={canino.id} canino={canino} />
+            <CaninoCard key={canino.id} canino={canino} ultimaVisita={null} />
           ))}
         </section>
       ) : (
@@ -84,38 +85,45 @@ export default async function CaninosPage() {
   );
 }
 
-function CaninoCard({ canino }: { canino: Canino }) {
+function CaninoCard({
+  canino,
+  ultimaVisita,
+}: {
+  canino: Canino;
+  ultimaVisita: string | null;
+}) {
   const initial = canino.nombre.charAt(0).toUpperCase();
   const esMacho = canino.sexo === "M";
   const SexoIcon = esMacho ? Mars : Venus;
 
-  return (
-    <Card className="group/canino gap-4 transition-shadow duration-200 hover:shadow-lg">
-      <CardHeader className="flex-row items-center gap-4 px-6 pb-0">
-        <div
-          className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 font-display text-xl font-bold text-primary"
-          aria-hidden="true"
-        >
-          {initial}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-semibold text-foreground">
-            {canino.nombre}
-          </p>
-          <p className="truncate text-sm text-muted-foreground">
-            {canino.raza?.trim() || "Mestizo"}
-          </p>
-        </div>
-        {/* NOTA: badge "Activo" decorativo. El schema no tiene columna `activo`;
-            si en el futuro se añade, este Badge pasa a reflejarla. */}
-        <Badge variant="secondary" className="shrink-0">
-          Activo
-        </Badge>
-      </CardHeader>
+  const ultimaVisitaTexto = ultimaVisita
+    ? new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(ultimaVisita))
+    : null;
 
-      <CardContent className="flex flex-col gap-3 pt-0">
-        <Separator />
-        <dl className="grid grid-cols-3 gap-2">
+  return (
+    <HoverCardWrapper>
+      <Card className="group/canino flex h-full flex-col gap-4 transition-shadow duration-200 hover:shadow-lg">
+        <CardHeader className="flex-row items-center gap-4 px-6 pb-0">
+          <div
+            className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 font-display text-xl font-bold text-primary"
+            aria-hidden="true"
+          >
+            {initial}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-lg font-semibold text-foreground">
+              {canino.nombre}
+            </p>
+            <p className="truncate text-sm text-muted-foreground">
+              {canino.raza?.trim() || "Mestizo"}
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 gap-2 px-6 flex-1">
           <MetaCell
             icon={SexoIcon}
             label="Sexo"
@@ -131,38 +139,43 @@ function CaninoCard({ canino }: { canino: Canino }) {
             label="Peso"
             value={canino.peso_kg != null ? `${canino.peso_kg} kg` : "—"}
           />
-        </dl>
-      </CardContent>
+        </CardContent>
 
-      <CardFooter className="gap-2 pt-0">
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="flex-1 justify-start"
-        >
-          <Link href={`/dashboard/historial?canino=${canino.id}`}>
-            <ClipboardList className="size-4" strokeWidth={1.75} />
-            Ver historial
-          </Link>
-        </Button>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="flex-1 justify-start"
-        >
-          <Link href={`/dashboard/caninos/${canino.id}/editar`}>
-            <Pencil className="size-4" strokeWidth={1.75} />
-            Editar
-          </Link>
-        </Button>
-        <EliminarCaninoButton
-          caninoId={canino.id}
-          nombre={canino.nombre}
-        />
-      </CardFooter>
-    </Card>
+        <CardFooter className="flex-col gap-2 pt-0 px-6">
+          <Button asChild className="w-full justify-start" size="sm">
+            <Link href={`/dashboard/citas/nueva?canino=${canino.id}`}>
+              <Plus className="mr-2 size-4" strokeWidth={2} />
+              Agendar cita
+            </Link>
+          </Button>
+          <div className="flex w-full gap-2">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start text-muted-foreground"
+            >
+              <Link href={`/dashboard/historial?canino=${canino.id}`}>
+                <ClipboardList className="mr-2 size-4" strokeWidth={1.75} />
+                Historial
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start text-muted-foreground"
+            >
+              <Link href={`/dashboard/caninos/${canino.id}/editar`}>
+                <Pencil className="mr-2 size-4" strokeWidth={1.75} />
+                Editar
+              </Link>
+            </Button>
+            <EliminarCaninoButton caninoId={canino.id} nombre={canino.nombre} />
+          </div>
+        </CardFooter>
+      </Card>
+    </HoverCardWrapper>
   );
 }
 

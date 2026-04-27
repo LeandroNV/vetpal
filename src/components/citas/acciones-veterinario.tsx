@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, CheckCheck, ClipboardPlus, Loader2 } from "lucide-react";
@@ -40,7 +40,10 @@ export function AccionesVeterinario({
   const [isPending, startTransition] = useTransition();
   const [openCompletar, setOpenCompletar] = useState(false);
 
-  if (estado === "pendiente") {
+  // Optimistic: muestra el siguiente estado inmediatamente
+  const [optimisticEstado, setOptimisticEstado] = useOptimistic(estado);
+
+  if (optimisticEstado === "pendiente") {
     return (
       <Button
         variant="outline"
@@ -49,6 +52,7 @@ export function AccionesVeterinario({
         className="press-feedback text-success hover:bg-success/10 hover:text-success"
         onClick={() => {
           startTransition(async () => {
+            setOptimisticEstado("confirmada");
             const result = await confirmarCita({ citaId });
             if (result.ok) {
               toast.success("Cita confirmada", {
@@ -75,7 +79,7 @@ export function AccionesVeterinario({
     );
   }
 
-  if (estado === "confirmada") {
+  if (optimisticEstado === "confirmada") {
     return (
       <AlertDialog
         open={openCompletar}
@@ -110,6 +114,7 @@ export function AccionesVeterinario({
               onClick={(e) => {
                 e.preventDefault();
                 startTransition(async () => {
+                  setOptimisticEstado("completada");
                   const result = await completarCita({ citaId });
                   if (result.ok) {
                     toast.success("Cita completada", {
@@ -143,7 +148,7 @@ export function AccionesVeterinario({
     );
   }
 
-  if (estado === "completada") {
+  if (optimisticEstado === "completada") {
     return (
       <Button
         asChild

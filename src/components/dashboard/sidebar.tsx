@@ -7,10 +7,13 @@ import type { Database } from "@/lib/supabase/database.types";
 
 import { LogoutButton } from "./logout-button";
 import { NavList } from "./nav-list";
+import { ThemeToggle } from "./theme-toggle";
+import { VetCommandMenu } from "./vet-command-menu";
 
 type Rol = Database["public"]["Enums"]["rol_usuario"];
 
 type Profile = {
+  id: string;
   nombre_completo: string;
   rol: Rol;
 } | null;
@@ -60,8 +63,14 @@ export function DashboardSidebar({
         </span>
       </Link>
 
-      <div className="flex-1 overflow-y-auto pb-4">
-        <NavList />
+      {(profile?.rol === "veterinario" || profile?.rol === "administrador") && (
+        <div className="px-6 pb-6">
+          <VetCommandMenu />
+        </div>
+      )}
+
+      <div className="flex-1 px-4">
+        <NavList rol={profile?.rol ?? "propietario"} />
       </div>
 
       <Separator />
@@ -81,8 +90,10 @@ export function DashboardSidebar({
             <p className="truncate text-xs text-muted-foreground">{rolLabel}</p>
           ) : null}
         </div>
+        <ThemeToggle />
         <LogoutButton />
       </div>
     </aside>
   );
 }
+

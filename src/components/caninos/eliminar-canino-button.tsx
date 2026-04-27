@@ -17,16 +17,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { eliminarCanino } from "@/app/(dashboard)/dashboard/caninos/actions";
 
 interface EliminarCaninoButtonProps {
   caninoId: string;
   nombre: string;
+  /** "button" renderiza un Button standalone; "dropdown" renderiza un DropdownMenuItem */
+  variant?: "button" | "dropdown";
 }
 
 export function EliminarCaninoButton({
   caninoId,
   nombre,
+  variant = "button",
 }: EliminarCaninoButtonProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -47,8 +51,19 @@ export function EliminarCaninoButton({
     });
   };
 
-  return (
-    <AlertDialog open={open} onOpenChange={(v) => !isPending && setOpen(v)}>
+  const trigger =
+    variant === "dropdown" ? (
+      <DropdownMenuItem
+        onSelect={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+      >
+        <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        Eliminar
+      </DropdownMenuItem>
+    ) : (
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
@@ -59,6 +74,11 @@ export function EliminarCaninoButton({
           Eliminar
         </Button>
       </AlertDialogTrigger>
+    );
+
+  return (
+    <AlertDialog open={open} onOpenChange={(v) => !isPending && setOpen(v)}>
+      {trigger}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Eliminar a {nombre}?</AlertDialogTitle>

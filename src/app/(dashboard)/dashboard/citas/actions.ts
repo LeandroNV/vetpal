@@ -79,6 +79,30 @@ const vetActionSchema = z.object({
 export type VetActionResult = { ok: true } | { ok: false; error: string };
 
 /**
+ * Helper DRY: auth + verificación de rol veterinario.
+ * Retorna el supabase client autenticado o un error tipado.
+ */
+async function requireVetRole() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Debes iniciar sesión." };
+
+  const { data: profile } = await supabase
+    .from("usuarios")
+    .select("rol")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.rol !== "veterinario" && profile.rol !== "administrador")) {
+    return { ok: false as const, error: "No tienes permisos para esta acción." };
+  }
+
+  return { ok: true as const, supabase };
+}
+
+/**
  * Confirma una cita pendiente. Solo veterinarios.
  * Transición: pendiente → confirmada.
  */
@@ -88,24 +112,10 @@ export async function confirmarCita(input: {
   const parsed = vetActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Cita inválida." };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Debes iniciar sesión." };
+  const auth = await requireVetRole();
+  if (!auth.ok) return { ok: false, error: auth.error };
 
-  // Verificar rol veterinario
-  const { data: profile } = await supabase
-    .from("usuarios")
-    .select("rol")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || (profile.rol !== "veterinario" && profile.rol !== "administrador")) {
-    return { ok: false, error: "No tienes permisos para esta acción." };
-  }
-
-  const { error, data } = await supabase
+  const { error, data } = await auth.supabase
     .from("citas")
     .update({ estado: "confirmada" })
     .eq("id", parsed.data.citaId)
@@ -136,24 +146,10 @@ export async function completarCita(input: {
   const parsed = vetActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Cita inválida." };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Debes iniciar sesión." };
+  const auth = await requireVetRole();
+  if (!auth.ok) return { ok: false, error: auth.error };
 
-  // Verificar rol veterinario
-  const { data: profile } = await supabase
-    .from("usuarios")
-    .select("rol")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || (profile.rol !== "veterinario" && profile.rol !== "administrador")) {
-    return { ok: false, error: "No tienes permisos para esta acción." };
-  }
-
-  const { error, data } = await supabase
+  const { error, data } = await auth.supabase
     .from("citas")
     .update({ estado: "completada" })
     .eq("id", parsed.data.citaId)
