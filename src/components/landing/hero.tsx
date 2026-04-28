@@ -76,14 +76,14 @@ export default function Hero() {
           </div>
 
           {/* Right Column: Visual Composition */}
-          <div className="lg:col-span-5 relative h-[450px] lg:h-[600px] mt-12 lg:mt-0">
+          <div className="lg:col-span-5 relative h-[450px] lg:h-[600px]">
             <motion.div
               initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95, rotate: -2 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={t(0.3, 1)}
-              className="absolute top-4 lg:top-10 right-0 lg:right-4 w-full lg:w-[85%] rounded-[2rem] bg-white p-2 shadow-2xl shadow-primary/5 ring-1 ring-black/5"
+              className="absolute lg:top-10 right-0 lg:right-4 w-full lg:w-[85%] rounded-[2rem] bg-white p-2 shadow-2xl shadow-primary/5 ring-1 ring-black/5"
             >
-              <div className="aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-muted relative">
+              <div className="aspect-4/5 overflow-hidden rounded-[1.5rem] bg-muted relative">
                 <video
                   src="/videos/hero-video.mp4"
                   autoPlay
