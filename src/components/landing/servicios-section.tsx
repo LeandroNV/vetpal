@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Apple, Heart, Home, Scissors, Stethoscope, ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ type Service = {
   icon: LucideIcon;
   color: string;
   bg: string;
+  image: string;
 };
 
 const SERVICES: Service[] = [
@@ -23,6 +25,7 @@ const SERVICES: Service[] = [
     icon: Stethoscope,
     color: "text-emerald-700",
     bg: "bg-emerald-100/50",
+    image: "/images/landing/salud-preventiva.jpeg",
   },
   {
     name: "Estética y Grooming",
@@ -31,6 +34,7 @@ const SERVICES: Service[] = [
     icon: Scissors,
     color: "text-blue-700",
     bg: "bg-blue-100/50",
+    image: "/images/landing/grooming.jpeg",
   },
   {
     name: "Nutrición Especializada",
@@ -39,6 +43,7 @@ const SERVICES: Service[] = [
     icon: Apple,
     color: "text-orange-700",
     bg: "bg-orange-100/50",
+    image: "/images/landing/nutricion.png",
   },
   {
     name: "Guardería Premium",
@@ -47,12 +52,20 @@ const SERVICES: Service[] = [
     icon: Home,
     color: "text-purple-700",
     bg: "bg-purple-100/50",
+    image: "/images/landing/guarderia.png",
   },
 ];
 
 export default function ServiciosSection() {
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIndex((current) => (current + 1) % SERVICES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [activeIndex]);
 
   return (
     <section id="servicios" className="scroll-mt-24 py-32 bg-white">
@@ -129,20 +142,28 @@ export default function ServiciosSection() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-                  className={cn("absolute inset-0 size-full flex items-center justify-center", SERVICES[activeIndex].bg)}
+                  className={cn("absolute inset-0 size-full flex items-center justify-center overflow-hidden", SERVICES[activeIndex].bg)}
                 >
-                  {/* Decorative abstract elements instead of real images for now */}
-                  <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)]" />
+                  <Image 
+                    src={SERVICES[activeIndex].image} 
+                    alt={SERVICES[activeIndex].name} 
+                    fill 
+                    className="object-cover transition-transform duration-700 hover:scale-105" 
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                  />
                   
+                  {/* Subtle overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent pointer-events-none" />
+
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
-                    className="relative z-10 size-48 rounded-full bg-white shadow-xl flex items-center justify-center"
+                    className="absolute bottom-8 right-8 z-10 size-16 rounded-full bg-white/90 backdrop-blur-md shadow-2xl flex items-center justify-center ring-1 ring-black/5"
                   >
                     {(() => {
                       const ActiveIcon = SERVICES[activeIndex].icon;
-                      return <ActiveIcon className={cn("size-20", SERVICES[activeIndex].color)} strokeWidth={1.5} />;
+                      return <ActiveIcon className={cn("size-6", SERVICES[activeIndex].color)} strokeWidth={2} />;
                     })()}
                   </motion.div>
                 </motion.div>

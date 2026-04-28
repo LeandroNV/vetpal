@@ -28,7 +28,7 @@ export default function Hero() {
               initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={t(0.1)}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-4 py-1.5 text-xs font-medium text-primary tracking-wide uppercase backdrop-blur-sm shadow-sm"
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/60 px-4 py-1.5 text-xs font-medium text-primary tracking-wide uppercase backdrop-blur-sm shadow-sm w-[calc(100%-40%)]"
             >
               <PawPrint className="size-3.5" />
               <span>Clínica Digital VETPAL</span>
@@ -76,25 +76,31 @@ export default function Hero() {
           </div>
 
           {/* Right Column: Visual Composition */}
-          <div className="lg:col-span-5 relative lg:h-[600px] hidden md:block">
+          <div className="lg:col-span-5 relative h-[450px] lg:h-[600px] mt-12 lg:mt-0">
             <motion.div
               initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95, rotate: -2 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={t(0.3, 1)}
-              className="absolute top-10 right-4 w-[85%] rounded-[2rem] bg-white p-2 shadow-2xl shadow-primary/5 ring-1 ring-black/5"
+              className="absolute top-4 lg:top-10 right-0 lg:right-4 w-full lg:w-[85%] rounded-[2rem] bg-white p-2 shadow-2xl shadow-primary/5 ring-1 ring-black/5"
             >
               <div className="aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-muted relative">
-                {/* Fallback pattern if no image */}
-                <div className="absolute inset-0 bg-[#E8F0EA] opacity-50" />
+                <video
+                  src="/videos/hero-video.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 size-full object-cover opacity-90"
+                />
                 {/* Decorative UI Overlay */}
-                <div className="absolute bottom-6 left-6 right-6 rounded-2xl bg-white/80 p-5 backdrop-blur-md shadow-lg border border-white/40">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-[#C46A42]/10 flex items-center justify-center text-[#C46A42]">
-                      <PawPrint className="size-6" />
+                <div className="absolute bottom-4 lg:bottom-6 left-4 lg:left-6 right-4 lg:right-6 rounded-2xl bg-white/80 p-4 lg:p-5 backdrop-blur-md shadow-lg border border-white/40">
+                  <div className="flex items-center gap-3 lg:gap-4">
+                    <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-full bg-[#C46A42]/10 flex items-center justify-center text-[#C46A42] shrink-0">
+                      <PawPrint className="size-5 lg:size-6" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próxima Cita</p>
-                      <p className="font-serif text-lg text-[#1A2E25]">Vacunación Anual</p>
+                      <p className="text-[10px] lg:text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próxima Cita</p>
+                      <p className="font-serif text-base lg:text-lg text-[#1A2E25]">Vacunación Anual</p>
                     </div>
                   </div>
                 </div>
@@ -106,7 +112,7 @@ export default function Hero() {
               initial={reduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={t(0.7, 0.8)}
-              className="absolute top-28 -left-10 rounded-2xl bg-white p-5 shadow-xl shadow-black/5 ring-1 ring-black/5 flex items-center gap-4 z-20"
+              className="absolute top-16 lg:top-28 left-0 lg:-left-10 rounded-2xl bg-white p-4 lg:p-5 shadow-xl shadow-black/5 ring-1 ring-black/5 flex items-center gap-3 lg:gap-4 z-20 scale-90 lg:scale-100 origin-top-left"
             >
               <div className="flex -space-x-3">
                 {[1, 2, 3].map((i) => (

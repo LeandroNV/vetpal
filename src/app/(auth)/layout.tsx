@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PawPrint } from "lucide-react";
 import { AuthDecorativePanel } from "@/components/shared/auth-decorative-panel";
 
@@ -16,18 +17,10 @@ export default function AuthLayout({
         <header className="flex items-center gap-2 px-6 pt-6 lg:hidden">
           <Link
             href="/"
-            className="flex items-center gap-2 press-feedback"
+            className="flex items-center press-feedback"
             aria-label="Inicio VETPAL"
           >
-            <span
-              className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground"
-              aria-hidden="true"
-            >
-              <PawPrint className="size-4" strokeWidth={2.5} />
-            </span>
-            <span className="font-display text-lg font-extrabold tracking-tight">
-              VETPAL
-            </span>
+            <Image src="/images/landing/logo.svg" alt="VETPAL Logo" width={120} height={28} className="h-7 w-auto" />
           </Link>
         </header>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PawPrint } from "lucide-react";
 
 const FOOTER_LINKS = [
@@ -12,9 +13,8 @@ export default function Footer() {
     <footer className="border-t border-white/10 bg-foreground py-12 text-background" role="contentinfo">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 md:grid-cols-3 md:items-start">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2.5" aria-label="VETPAL, inicio">
-            <PawPrint className="size-6 text-accent" strokeWidth={1.75} />
-            <span className="font-heading text-lg font-extrabold text-white">VETPAL</span>
+          <Link href="/" className="inline-flex items-center" aria-label="VETPAL, inicio">
+            <Image src="/images/landing/logo.svg" alt="VETPAL Logo" width={140} height={32} className="h-7 w-auto brightness-0 invert" />
           </Link>
           <p className="mt-3 max-w-xs text-sm text-white/50">
             Cuidado canino, planeado con cariño — en un solo lugar.

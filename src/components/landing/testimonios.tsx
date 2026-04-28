@@ -42,9 +42,6 @@ const ITEMS = [
 ];
 
 export default function Testimonios() {
-  // Duplicate for seamless marquee
-  const marqueeItems = [...ITEMS, ...ITEMS, ...ITEMS];
-
   return (
     <section id="testimonios" className="overflow-hidden bg-[#1A2E25] py-32 text-white">
       <div className="mx-auto mb-16 px-6 text-center">
@@ -56,41 +53,43 @@ export default function Testimonios() {
 
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
         {/* Left/Right Gradients for smooth fade */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-linear-to-r from-[#1A2E25] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-linear-to-l from-[#1A2E25] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-[15%] md:w-1/3 bg-linear-to-r from-[#1A2E25] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[15%] md:w-1/3 bg-linear-to-l from-[#1A2E25] to-transparent z-10" />
 
-        <div className="flex w-full gap-6 px-4" style={{ "--duration": "50s" } as React.CSSProperties}>
-          <div className="flex shrink-0 animate-marquee items-center justify-around gap-6">
-            {marqueeItems.map((t, i) => (
-              <article
-                key={i}
-                className={cn(
-                  "relative w-[350px] shrink-0 rounded-3xl p-8 text-[#1A2E25] transition-transform duration-300 hover:scale-[1.02]",
-                  t.bg
-                )}
-              >
-                <div className="mb-6 flex gap-1">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="size-4 fill-[#C46A42] text-[#C46A42]" strokeWidth={0} />
-                  ))}
-                </div>
-                
-                <p className="mb-8 font-serif text-lg leading-relaxed">
-                  "{t.quote}"
-                </p>
-                
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1A2E25]/10 font-serif font-bold">
-                    {t.initial}
+        <div className="flex w-full gap-6 px-4" style={{ "--duration": "40s", "--gap": "1.5rem" } as React.CSSProperties}>
+          {[0, 1].map((trackIdx) => (
+            <div key={trackIdx} className="flex shrink-0 animate-marquee items-center justify-around gap-6" aria-hidden={trackIdx === 1}>
+              {ITEMS.map((t, i) => (
+                <article
+                  key={`${trackIdx}-${i}`}
+                  className={cn(
+                    "relative w-[300px] md:w-[350px] shrink-0 rounded-3xl p-8 text-[#1A2E25] transition-transform duration-300 hover:scale-[1.02]",
+                    t.bg
+                  )}
+                >
+                  <div className="mb-6 flex gap-1">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} className="size-4 fill-[#C46A42] text-[#C46A42]" strokeWidth={0} />
+                    ))}
                   </div>
-                  <div>
-                    <p className="font-bold text-sm uppercase tracking-wide">{t.name}</p>
-                    <p className="text-xs opacity-70">{t.city}</p>
+                  
+                  <p className="mb-8 font-serif text-base md:text-lg leading-relaxed">
+                    "{t.quote}"
+                  </p>
+                  
+                  <div className="flex items-center gap-4 mt-auto">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#1A2E25]/10 font-serif font-bold">
+                      {t.initial}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm uppercase tracking-wide">{t.name}</p>
+                      <p className="text-xs opacity-70">{t.city}</p>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </section>

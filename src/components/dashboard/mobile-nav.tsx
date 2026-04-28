@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, PawPrint } from "lucide-react";
 import { useState } from "react";
 
@@ -72,21 +73,10 @@ export function MobileNav({
           <Link
             href="/dashboard"
             onClick={close}
-            className="press-feedback flex items-center gap-2.5 px-6 pt-7 pb-6"
+            className="press-feedback flex items-center px-6 pt-7 pb-6"
             aria-label="Inicio VETPAL"
           >
-            <span
-              className="grid size-9 place-items-center rounded-xl bg-accent text-accent-foreground shadow-sm"
-              aria-hidden="true"
-            >
-              <PawPrint className="size-4" strokeWidth={2.5} />
-            </span>
-            <span
-              className="font-display text-xl font-extrabold tracking-tight"
-              style={{ letterSpacing: "-0.03em" }}
-            >
-              VETPAL
-            </span>
+            <Image src="/images/landing/logo.svg" alt="VETPAL Logo" width={140} height={32} className="h-8 w-auto dark:brightness-0 dark:invert" />
           </Link>
         </SheetHeader>
 

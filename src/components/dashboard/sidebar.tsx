@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PawPrint } from "lucide-react";
+import Image from "next/image";
+import { LogOut, PawPrint } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -46,21 +47,10 @@ export function DashboardSidebar({
     >
       <Link
         href="/dashboard"
-        className="press-feedback flex items-center gap-2.5 px-6 pt-7 pb-6"
+        className="press-feedback flex items-center px-6 pt-7 pb-6"
         aria-label="Inicio VETPAL"
       >
-        <span
-          className="grid size-9 place-items-center rounded-xl bg-accent text-accent-foreground shadow-sm"
-          aria-hidden="true"
-        >
-          <PawPrint className="size-4" strokeWidth={2.5} />
-        </span>
-        <span
-          className="font-display text-xl font-extrabold tracking-tight"
-          style={{ letterSpacing: "-0.03em" }}
-        >
-          VETPAL
-        </span>
+        <Image src="/images/landing/logo.svg" alt="VETPAL Logo" width={140} height={32} className="h-8 w-auto dark:brightness-0 dark:invert" />
       </Link>
 
       {(profile?.rol === "veterinario" || profile?.rol === "administrador") && (

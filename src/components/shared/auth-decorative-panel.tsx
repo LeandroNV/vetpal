@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { PawPrint } from "lucide-react";
 
 /**
@@ -64,19 +65,8 @@ export function AuthDecorativePanel() {
       </svg>
 
       {/* Header: logomark */}
-      <header className="relative z-10 flex items-center gap-3 px-12 pt-12">
-        <span
-          className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground shadow-sm"
-          aria-hidden="true"
-        >
-          <PawPrint className="size-5" strokeWidth={2.5} />
-        </span>
-        <span
-          className="font-display text-2xl font-extrabold tracking-tight"
-          style={{ letterSpacing: "-0.03em" }}
-        >
-          VETPAL
-        </span>
+      <header className="relative z-10 flex items-center px-12 pt-12">
+        <Image src="/images/landing/logo.svg" alt="VETPAL Logo" width={140} height={32} className="h-8 w-auto brightness-0 invert" />
       </header>
 
       {/* Contenido central: tagline editorial */}
